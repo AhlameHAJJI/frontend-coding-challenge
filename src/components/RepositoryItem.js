@@ -1,8 +1,8 @@
 import React from 'react';
 
-const RepositoryItem = props => {
+const repositoryItem = props => {
     return (
-        <div> repo item </div>
+        <div>repo item </div>
     )
 }
-export default RepositoryItem;
+export default repositoryItem;
