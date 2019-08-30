@@ -1,63 +1,82 @@
 import React,{Component} from 'react';
-import { Spin } from 'antd';
-import RepositoryItem from 'components/RepositoryItem'
+import { Spin,Button } from 'antd';
 import axios from 'axios';
+import moment from "moment";
+import RepositoryItem from 'components/RepositoryItem';
+
 const API_URL = 'https://api.github.com';
-const per_page = 100;
+const per_page= 100;
+
 class RepositoryList extends Component {
+    
     state = {
         repositories: [],
-        prev: null,
-        next:"",
-        last:"",
-        total: null,
+        last:null,
         current_page: 1
       }
-       makeHttpRequestWithPage =  (pageNumber,per_page) => {
-          const url = `${API_URL}/search/repositories?q=created:>2019-07-28&sort=stars&order=desc&page=${pageNumber}&per_page=${per_page}`;
+
+    getRepositories =  (pageNumber,per_page) => {
+
+          let date = moment().subtract(30, "days").format("YYYY-MM-DD");
+          const url = `${API_URL}/search/repositories?q=created:>${date}&sort=stars&order=desc&page=${pageNumber}&per_page=${per_page}`;
        
          axios.get(url).then((response) => {
-           this.setState({ repositories: response.data.items})
-          console.log(this.state.repositories); 
-          var linkHeader = response.headers.link;
-          var parse = require('parse-link-header');        
-          var parsed = parse(linkHeader);
 
+            this.setState({ repositories: response.data.items})
+            let linkHeader = response.headers.link;
+            let parse = require('parse-link-header');        
+            let parsed = parse(linkHeader);
+      
+            this.setState({ current_page: pageNumber})
+            this.setState({ last: parsed.last.page})
           
-          this.state.current_page!==1 && this.setState({ prev: parsed.prev.page})
-          this.setState({ next: parsed.next.page})
-          this.setState({ last: parsed.last.page})
-          this.setState({ current_page: pageNumber})
-
-          console.log("prev",this.state.prev);
-          console.log("next",this.state.next);
-          console.log("last",this.state.last);
-          console.log("currentpage",this.state.current_page);
         })
     }
-        componentDidMount() {
-
-             this.makeHttpRequestWithPage(this.state.current_page,per_page);
-          }
+    componentDidMount() {
+         this.getRepositories(this.state.current_page,per_page);
+    }
     render(){
-        const per_page= 100;
-        const first= 1;
+       
+        let renderPageNumbers="";
+        const pageNumbers = [];
+        if (this.state.last !== null) {
+            for (let i = 1; i <= this.state.last; i++) {
+              pageNumbers.push(i);
+            }
+            renderPageNumbers = pageNumbers.map(number => {
         
+                if (number === 1 || number === this.state.last || (number >= this.state.current_page - 2 && number <= this.state.current_page + 2)) 
+                    return (
+                      <Button className="gr-pagination__number"  key={number} onClick={() => this.getRepositories(number,per_page)}>{number}   </Button>
+                    );
+                  
+              });
+
+            }
       
         return (
-            <div className="repo-list">
-               {this.state.repositories.length===0 &&  <div> the most starred Github repos that were created in the last 30 days </div> && <Spin size="large" className="spin" /> }
+            <div className="gr-list">
+               {this.state.repositories.length===0 &&  
+               <div> <Spin size="large" className="gr-spin" /> 
+               <div className="gr-loading"> The most starred Github repos that were created in the last 30 days </div> </div> }
                 {this.state.repositories.map(repo =>
+
                 <RepositoryItem 
-                key={repo.id} 
-                name={repo.name} 
-                avatar={repo.owner.avatar_url} 
-                description={repo.description} 
-                stars={repo.stargazers_count} 
-                issues={repo.open_issues_count}
-                ownerLogin={repo.owner.login}
-                ownerUrl={repo.owner.html_url}
-                 />)}   
+                  key={repo.id} 
+                  name={repo.name} 
+                  avatar={repo.owner.avatar_url} 
+                  description={repo.description} 
+                  stars={repo.stargazers_count} 
+                  issues={repo.open_issues_count}
+                  ownerLogin={repo.owner.login}
+                  ownerUrl={repo.owner.html_url}
+                  createdAt= {repo.created_at}
+                 />
+                 )}
+                {this.state.repositories.length!==0 && 
+                <div className="gr-pagination">
+                    {renderPageNumbers}
+                </div> }
             </div>
            
         )

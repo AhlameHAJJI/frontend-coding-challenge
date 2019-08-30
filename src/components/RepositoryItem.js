@@ -1,19 +1,20 @@
 import React from 'react';
 import { Card, Icon, Avatar,Tag } from 'antd';
+import Moment from 'moment'
 const { Meta } = Card;
 
 const repositoryItem = props => {
 return (
-    <div style={{ background: '#ECECEC', padding: '30px' ,width:'100%'}}>
-      <Card style={{ width: '100%' }} >
+    <div className="gr-item">
+      <Card className="gr-item__card" >
        <Meta
-         avatar={<Avatar src={props.avatar} style={{ width: 100, height : 100 }}/>}
+         avatar={<Avatar src={props.avatar} className="gr-item__card--avatar"/>}
          title={props.name}
          description={props.description}
        />
        <Tag color="green">{props.stars} <Icon type="star" /></Tag>
        <Tag color="magenta">{props.issues} <Icon type="exclamation" /></Tag>
-        <div className="owner-link"> Submitted by <a href={props.ownerUrl} > {props.ownerLogin} </a> </div>
+       <div className="gr-item__card--owner"> Submitted  <span className="gr-item__card--time">{Moment(props.createdAt).fromNow()} </span> by <a href={props.ownerUrl} > {props.ownerLogin} </a> </div>
       </Card>
     
    
